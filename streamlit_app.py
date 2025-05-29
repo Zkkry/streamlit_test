@@ -1,38 +1,61 @@
 import streamlit as st
 import requests
+import datetime
 
-# App title
-st.title("🌊 Real-Time Marine Weather App")
+# Function to call WeatherAPI
+def get_weatherapi_weather(city):
+    api_key = "749ef7b6d061443ca12121812252905"
+    url = f"http://api.weatherapi.com/v1/current.json?key={api_key}&q={city}"
+    response = requests.get(url)
+    return response.json()
 
-# API Key
-API_KEY = "bdcd10e4-3c83-11f0-89da-0242ac130006-bdcd1148-3c83-11f0-89da-0242ac130006"
+# Function to call Stormglass API (uses lat/lon)
+def get_stormglass_weather(lat, lon):
+    api_key = "bdcd10e4-3c83-11f0-89da-0242ac130006-bdcd1148-3c83-11f0-89da-0242ac130006"
+    end_time = datetime.datetime.utcnow().isoformat()
 
-# User input: coordinates
-st.subheader("📍 Enter Coordinates")
-lat = st.number_input("Latitude", value=5.4164)  # Default: Penang
-lon = st.number_input("Longitude", value=100.3327)
-
-if lat and lon:
-    url = f"https://api.stormglass.io/v2/weather/point?lat={lat}&lng={lon}&params=waveHeight,swellHeight,windSpeed,airTemperature"
-    headers = {
-        "Authorization": API_KEY
+    url = f"https://api.stormglass.io/v2/weather/point"
+    params = {
+        'lat': lat,
+        'lng': lon,
+        'params': 'airTemperature,humidity,windSpeed',
+        'source': 'noaa',
+        'end': end_time,
     }
 
-    response = requests.get(url, headers=headers)
+    headers = {
+        'Authorization': api_key
+    }
 
-    if response.status_code == 200:
-        data = response.json()
-        hours = data.get("hours", [])
+    response = requests.get(url, params=params, headers=headers)
+    return response.json()
 
-        if hours:
-            current = hours[0]  # Get the most recent hour
-            st.subheader(f"🌤️ Marine Weather Conditions")
-            st.write(f"🌊 Wave Height: {current['waveHeight'].get('sg', 'N/A')} m")
-            st.write(f"🌊 Swell Height: {current['swellHeight'].get('sg', 'N/A')} m")
-            st.write(f"💨 Wind Speed: {current['windSpeed'].get('sg', 'N/A')} m/s")
-            st.write(f"🌡️ Air Temperature: {current['airTemperature'].get('sg', 'N/A')} °C")
-        else:
-            st.warning("No hourly data available.")
+# Streamlit UI
+st.title("Weather from WeatherAPI and Stormglass")
+
+city = st.text_input("Enter a city name:")
+
+if city:
+    # Call WeatherAPI
+    weatherapi_data = get_weatherapi_weather(city)
+    
+    if "current" in weatherapi_data:
+        st.subheader("WeatherAPI Data")
+        st.write(f"Temperature: {weatherapi_data['current']['temp_c']} °C")
+        st.write(f"Condition: {weatherapi_data['current']['condition']['text']}")
+        lat = weatherapi_data['location']['lat']
+        lon = weatherapi_data['location']['lon']
+
+        # Call Stormglass
+        stormglass_data = get_stormglass_weather(lat, lon)
+
+        st.subheader("Stormglass Data (NOAA Source)")
+        try:
+            hour_data = stormglass_data['hours'][0]
+            st.write(f"Air Temperature: {hour_data['airTemperature']['noaa']} °C")
+            st.write(f"Humidity: {hour_data['humidity']['noaa']} %")
+            st.write(f"Wind Speed: {hour_data['windSpeed']['noaa']} m/s")
+        except (KeyError, IndexError):
+            st.error("Stormglass data not available for this location right now.")
     else:
-        st.error("❌ Failed to retrieve data. Please check your API key and coordinates.")
-        st.code(response.text)
+        st.error("City not found or WeatherAPI error.")
