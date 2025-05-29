@@ -1,27 +1,22 @@
-import streamlit as st 
+import streamlit as st
 import requests
 
-# Set the app title 
-st.title('SEA TIDE FORECAST !!') 
+st.title("🌦️ Weather Checker")
 
-# Add a welcome message 
-st.write('Welcome to my Streamlit app BOSS!') 
+city = st.text_input("Enter a city name:", "Penang")
 
-# Create a text input 
-widgetuser_input = st.text_input('Enter a custom message:', 'Hello, Streamlit!') 
+if city:
+    API_KEY = "YOUR_OPENWEATHERMAP_API_KEY"  # Replace this with your real key
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
 
-# Display the customized message 
-st.write('Customized Message:', widgetuser_input)
+    response = requests.get(url)
 
-
-#API calls
-response = requests.get('https://www.worldtides.info/api/v2?heights&lat=5.4204&lon=100.3436&key=YOUR_API_KEY')
-
-if response.status_code == 200:
-    data = response.json()
-    st.write('Output:')
-    st.json(data)  # nicely formatted JSON output
-else:
-    st.error(f"API call failed with status code: {response.status_code}")
-
-
+    if response.status_code == 200:
+        data = response.json()
+        st.subheader(f"Weather in {city.title()}")
+        st.write(f"🌡️ Temperature: {data['main']['temp']} °C")
+        st.write(f"🌬️ Wind Speed: {data['wind']['speed']} m/s")
+        st.write(f"💧 Humidity: {data['main']['humidity']}%")
+        st.write(f"🌥️ Condition: {data['weather'][0]['description'].title()}")
+    else:
+        st.error("City not found or API error.")
