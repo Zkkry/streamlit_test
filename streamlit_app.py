@@ -8,8 +8,7 @@ API_KEY = "cb367eaa6af232c7c8bca6a77714c7ca"
 city = st.text_input("Enter city name:", "Pahang")
 
 if city:
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    response = requests.get(url)
+    response = requests.get("https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric")
 
     if response.status_code == 200:
         data = response.json()
