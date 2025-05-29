@@ -1,37 +1,38 @@
+import streamlit as st
 import requests
 
-def fetch_stormglass(lat, lon, api_key):
-    url = f'https://api.stormglass.io/v2/weather/point?lat={lat}&lng={lon}&params=waveHeight,swellHeight,windSpeed'
+# App title
+st.title("🌊 Real-Time Marine Weather App")
+
+# API Key
+API_KEY = "bdcd10e4-3c83-11f0-89da-0242ac130006-bdcd1148-3c83-11f0-89da-0242ac130006"
+
+# User input: coordinates
+st.subheader("📍 Enter Coordinates")
+lat = st.number_input("Latitude", value=5.4164)  # Default: Penang
+lon = st.number_input("Longitude", value=100.3327)
+
+if lat and lon:
+    url = f"https://api.stormglass.io/v2/weather/point?lat={lat}&lng={lon}&params=waveHeight,swellHeight,windSpeed,airTemperature"
     headers = {
-        'Authorization': api_key
+        "Authorization": API_KEY
     }
+
     response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
 
-def fetch_weatherapi(lat, lon, api_key):
-    url = f'http://api.weatherapi.com/v1/current.json?key={api_key}&q={lat},{lon}'
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+    if response.status_code == 200:
+        data = response.json()
+        hours = data.get("hours", [])
 
-def get_combined_weather(lat, lon, stormglass_key, weatherapi_key):
-    stormglass_data = fetch_stormglass(lat, lon, stormglass_key)
-    weatherapi_data = fetch_weatherapi(lat, lon, weatherapi_key)
-
-    # Combine full responses under separate keys to avoid key collisions
-    combined = {
-        'stormglass': stormglass_data,
-        'weatherapi': weatherapi_data
-    }
-    return combined
-
-if __name__ == "__main__":
-    STORMGLASS_API_KEY = 'bdcd10e4-3c83-11f0-89da-0242ac130006-bdcd1148-3c83-11f0-89da-0242ac130006'
-    WEATHERAPI_KEY = '749ef7b6d061443ca12121812252905'
-
-    latitude = 37.7749
-    longitude = -122.4194
-
-    data = get_combined_weather(latitude, longitude, STORMGLASS_API_KEY, WEATHERAPI_KEY)
-    print(data)
+        if hours:
+            current = hours[0]  # Get the most recent hour
+            st.subheader(f"🌤️ Marine Weather Conditions")
+            st.write(f"🌊 Wave Height: {current['waveHeight'].get('sg', 'N/A')} m")
+            st.write(f"🌊 Swell Height: {current['swellHeight'].get('sg', 'N/A')} m")
+            st.write(f"💨 Wind Speed: {current['windSpeed'].get('sg', 'N/A')} m/s")
+            st.write(f"🌡️ Air Temperature: {current['airTemperature'].get('sg', 'N/A')} °C")
+        else:
+            st.warning("No hourly data available.")
+    else:
+        st.error("❌ Failed to retrieve data. Please check your API key and coordinates.")
+        st.code(response.text)
