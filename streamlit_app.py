@@ -6,7 +6,7 @@ st.title("🌦️ Weather Checker")
 city = st.text_input("Enter a city name:", "Penang")
 
 if city:
-    API_KEY = "YOUR_OPENWEATHERMAP_API_KEY"  # Replace this with your real key
+    API_KEY = "cb367eaa6af232c7c8bca6a77714c7ca"  # Replace this with your real key
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
 
     response = requests.get(url)
