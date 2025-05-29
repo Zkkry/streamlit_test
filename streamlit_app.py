@@ -15,7 +15,7 @@ st.write('Customized Message:', widgetuser_input)
 
 
 #API calls
-response = requests.get('https://api.vatcomply.com/rates?base=USD')
+response = requests.get('https://www.worldtides.info/api/v2?heights&lat=5.4204&lon=100.3436&key=YOUR_API_KEY')
 
 if response.status_code == 200:
     data = response.json()
