@@ -1,22 +1,20 @@
 import streamlit as st
 import requests
 
-st.title("🌦️ Weather Checker")
+st.title("🌤️ Weather App")
 
 city = st.text_input("Enter a city name:", "Penang")
+API_KEY = "cb367eaa6af232c7c8bca6a77714c7ca"
 
 if city:
-    API_KEY = "cb367eaa6af232c7c8bca6a77714c7ca"  # Replace this with your real key
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-
     response = requests.get(url)
 
     if response.status_code == 200:
         data = response.json()
-        st.subheader(f"Weather in {city.title()}")
-        st.write(f"🌡️ Temperature: {data['main']['temp']} °C")
-        st.write(f"🌬️ Wind Speed: {data['wind']['speed']} m/s")
-        st.write(f"💧 Humidity: {data['main']['humidity']}%")
-        st.write(f"🌥️ Condition: {data['weather'][0]['description'].title()}")
+        st.write(f"Weather in {city}")
+        st.write("Temperature:", data["main"]["temp"], "°C")
+        st.write("Description:", data["weather"][0]["description"])
     else:
         st.error("City not found or API error.")
+        st.code(response.text)  # This shows the actual API error
