@@ -4,7 +4,7 @@ import requests
 st.title("🌤️ Weather App")
 
 city = st.text_input("Enter a city name:", "Penang")
-API_KEY = "cb367eaa6af232c7c8bca6a77714c7ca"
+API_KEY = "4a801bd757d1677a8c5a3af8ec080464"
 
 if city:
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
