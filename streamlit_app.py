@@ -3,12 +3,12 @@ import requests
 
 st.title("🌤️ Weather App")
 
-API_KEY = "cb367eaa6af232c7c8bca6a77714c7ca" 
+API_KEY = "749ef7b6d061443ca12121812252905" 
 
 city = st.text_input("Enter city name:", "Pahang")
 
 if city:
-    response = requests.get("https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric")
+    response = requests.get("http://api.weatherapi.com/v1/current.json?key=749ef7b6d061443ca12121812252905&q=Penang")
 
     if response.status_code == 200:
         data = response.json()
