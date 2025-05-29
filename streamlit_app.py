@@ -2,37 +2,49 @@ import streamlit as st
 import requests
 
 # Set the app title
-st.title('💱 MYR Currency Converter')
+st.title('🌐 Universal Currency Converter')
 
-# Add a welcome message
-st.write('Welcome to my Streamlit app, BOSS! 🚀')
+# Welcome message
+st.write('Welcome to the most flexible currency converter, BOSS! 💱')
 
-# Custom message input
+# Custom message
 user_input = st.text_input('Enter a custom message:', 'Hello, Streamlit!')
 st.write('Customized Message:', user_input)
 
-# API Call to get currency rates (base: MYR)
-response = requests.get('https://api.vatcomply.com/rates?base=MYR')
+# --- Get the list of currencies first ---
+# Use a known currency like USD to fetch all supported currencies
+initial_response = requests.get('https://api.vatcomply.com/rates?base=USD')
 
-if response.status_code == 200:
-    data = response.json()
-    rates = data.get('rates', {})
+if initial_response.status_code == 200:
+    initial_data = initial_response.json()
+    currencies = sorted(initial_data.get('rates', {}).keys())
 
-    # Currency selection
-    currencies = sorted(rates.keys())
-    selected_currency = st.selectbox('Select a currency to convert from MYR:', currencies)
+    # Let user select both base and target currencies
+    base_currency = st.selectbox('Select your base currency:', currencies, index=currencies.index("MYR") if "MYR" in currencies else 0)
+    target_currency = st.selectbox('Select currency to convert to:', currencies, index=currencies.index("USD") if "USD" in currencies else 0)
 
-    # Amount input
-    amount_myr = st.number_input('Enter amount in MYR:', min_value=0.0, value=1.0, step=0.1)
+    # Enter amount
+    amount = st.number_input(f'Enter amount in {base_currency}:', min_value=0.0, value=1.0, step=0.1)
 
-    # Calculate and display result
-    exchange_rate = rates[selected_currency]
-    converted_amount = amount_myr * exchange_rate
+    # Fetch conversion rate based on user base currency
+    response = requests.get(f'https://api.vatcomply.com/rates?base={base_currency}')
 
-    st.success(f"{amount_myr:.2f} MYR = {converted_amount:.2f} {selected_currency} (Rate: {exchange_rate:.4f})")
+    if response.status_code == 200:
+        data = response.json()
+        rates = data.get('rates', {})
+        
+        if target_currency in rates:
+            exchange_rate = rates[target_currency]
+            converted_amount = amount * exchange_rate
 
-    # Optional: View all rates
-    with st.expander("🔎 Show all exchange rates"):
-        st.json(rates)
+            st.success(f"{amount:.2f} {base_currency} = {converted_amount:.2f} {target_currency} (Rate: {exchange_rate:.4f})")
+        else:
+            st.warning(f"Currency '{target_currency}' not found in rates.")
+        
+        # Optional: Show all exchange rates from base currency
+        with st.expander(f"📊 Show all exchange rates from {base_currency}"):
+            st.json(rates)
+    else:
+        st.error(f"API call failed for base currency '{base_currency}' with status code: {response.status_code}")
 else:
-    st.error(f"API call failed with status code: {response.status_code}")
+    st.error("Failed to load currency list. Please try again later.")
