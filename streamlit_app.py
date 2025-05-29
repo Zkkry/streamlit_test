@@ -19,16 +19,10 @@ def get_combined_weather(lat, lon, stormglass_key, weatherapi_key):
     stormglass_data = fetch_stormglass(lat, lon, stormglass_key)
     weatherapi_data = fetch_weatherapi(lat, lon, weatherapi_key)
 
-    # Example: get first hour's data from Stormglass
-    stormglass_hour = stormglass_data['hours'][0] if stormglass_data.get('hours') else {}
-
+    # Combine full responses under separate keys to avoid key collisions
     combined = {
-        'temperature_c': weatherapi_data['current']['temp_c'],
-        'humidity': weatherapi_data['current']['humidity'],
-        'condition': weatherapi_data['current']['condition']['text'],
-        'waveHeight_m': stormglass_hour.get('waveHeight', {}).get('sg'),
-        'swellHeight_m': stormglass_hour.get('swellHeight', {}).get('sg'),
-        'windSpeed_mps': stormglass_hour.get('windSpeed', {}).get('sg'),
+        'stormglass': stormglass_data,
+        'weatherapi': weatherapi_data
     }
     return combined
 
