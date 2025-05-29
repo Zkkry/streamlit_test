@@ -1,34 +1,61 @@
 import streamlit as st
 import requests
-from urllib.parse import quote
 
-st.title("🎵 Song Lyrics and Playback")
+# --- Config ---
+API_KEY = "YOUR_OPENWEATHERMAP_API_KEY"  # Replace with your real API key
 
-# User inputs
-artist = st.text_input("Enter artist name:", "")
-song = st.text_input("Enter song title:", "")
+# --- App Title ---
+st.title("🌤️ Weather & Air Quality Dashboard")
 
-if artist and song:
-    # Fetch lyrics from lyrics.ovh
-    encoded_artist = quote(artist)
-    encoded_song = quote(song)
-    lyrics_url = f"https://api.lyrics.ovh/v1/{encoded_artist}/{encoded_song}"
-    response = requests.get(lyrics_url)
+# --- User Input ---
+city = st.text_input("Enter city name", "Kuala Lumpur")
 
-    if response.status_code == 200:
-        lyrics = response.json().get("lyrics", "Lyrics not found.")
-        st.subheader("🎤 Lyrics:")
-        st.text(lyrics)
+if city:
+    # --- Get weather data ---
+    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    weather_response = requests.get(weather_url)
+
+    if weather_response.status_code == 200:
+        weather_data = weather_response.json()
+
+        # Extract weather info
+        temp = weather_data['main']['temp']
+        humidity = weather_data['main']['humidity']
+        wind = weather_data['wind']['speed']
+        condition = weather_data['weather'][0]['description']
+        lat = weather_data['coord']['lat']
+        lon = weather_data['coord']['lon']
+
+        # Display current weather
+        st.subheader(f"📍 Weather in {city.title()}")
+        st.write(f"**Condition:** {condition.title()}")
+        st.write(f"**Temperature:** {temp} °C")
+        st.write(f"**Humidity:** {humidity}%")
+        st.write(f"**Wind Speed:** {wind} m/s")
+
+        # --- Get air quality data ---
+        aqi_url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={API_KEY}"
+        aqi_response = requests.get(aqi_url)
+
+        if aqi_response.status_code == 200:
+            aqi_data = aqi_response.json()
+            aqi_index = aqi_data['list'][0]['main']['aqi']
+            aqi_meaning = {
+                1: "Good",
+                2: "Fair",
+                3: "Moderate",
+                4: "Poor",
+                5: "Very Poor"
+            }
+
+            st.subheader("🧭 Air Quality Index")
+            st.write(f"**AQI Level:** {aqi_index} ({aqi_meaning.get(aqi_index, 'Unknown')})")
+
+            # Optional: Show pollutant levels
+            pollutants = aqi_data['list'][0]['components']
+            st.markdown("**Pollutants (µg/m³):**")
+            st.json(pollutants)
+        else:
+            st.error("Failed to retrieve air quality data.")
     else:
-        st.error("Could not find lyrics. Please check the artist and song name.")
-
-    # Embed YouTube search
-    st.subheader("▶️ Play Song:")
-    search_query = f"{artist} {song} official"
-    youtube_url = f"https://www.youtube.com/results?search_query={quote(search_query)}"
-    st.markdown(f"[Search on YouTube]({youtube_url})", unsafe_allow_html=True)
-
-    # Embed first result (alternative option using iframe, but YouTube restricts autoplay for search pages)
-    st.components.v1.iframe(f"https://www.youtube.com/embed?listType=search&list={quote(search_query)}", height=400)
-else:
-    st.info("Please enter both artist and song title to get started.")
+        st.error("City not found. Please try another.")
