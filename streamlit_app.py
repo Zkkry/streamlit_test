@@ -9,7 +9,7 @@ st.title("🎥 TMDb Movie Explorer App")
 st.markdown("Search movies by title and explore ratings, genres, and details.")
 
 # ========== Developer API Key ==========
-API_KEY = "4f658b3a4df357c0e36dea39fe745497"=
+API_KEY = "4f658b3a4df357c0e36dea39fe745497"
 
 # ========== User Input ==========
 query = st.text_input("Enter a movie title:", "Sheriff: Narko Integriti")
