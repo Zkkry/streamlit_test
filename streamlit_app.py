@@ -1,28 +1,78 @@
 import streamlit as st
 import requests
+import pandas as pd
+import altair as alt
 
-# Function to call WeatherAPI
-def get_weatherapi_weather(city):
-    api_key = "749ef7b6d061443ca12121812252905"  # Replace with your actual key
-    url = f"http://api.weatherapi.com/v1/current.json?key={api_key}&q={city}"
+# ========== Streamlit UI Setup ==========
+st.set_page_config(page_title="🎬 TMDb Movie Explorer", layout="centered")
+st.title("🎥 TMDb Movie Explorer App")
+st.markdown("Search movies by title and explore ratings, genres, and details.")
+
+# ========== User Input ==========
+api_key = st.text_input("Enter your TMDb API key:", type="password")
+query = st.text_input("Enter a movie title:", "Inception")
+
+# ========== TMDb API Call Functions ==========
+
+def search_movie(query, api_key):
+    url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}"
     response = requests.get(url)
     return response.json()
 
-# Streamlit UI
-st.title("Current Weather (via WeatherAPI)")
+def get_movie_details(movie_id, api_key):
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}"
+    response = requests.get(url)
+    return response.json()
 
-city = st.text_input("Enter a city name:")
-
-if city:
-    data = get_weatherapi_weather(city)
-
-    if "current" in data:
-        st.subheader(f"Weather in {data['location']['name']}, {data['location']['country']}")
-        st.write(f"Temperature: {data['current']['temp_c']} °C")
-        st.write(f"Feels Like: {data['current']['feelslike_c']} °C")
-        st.write(f"Condition: {data['current']['condition']['text']}")
-        st.image("https:" + data['current']['condition']['icon'])
-        st.write(f"Humidity: {data['current']['humidity']}%")
-        st.write(f"Wind: {data['current']['wind_kph']} kph {data['current']['wind_dir']}")
+# ========== Fetch and Display Data ==========
+if st.button("Search Movie"):
+    if not api_key:
+        st.warning("⚠ Please enter your TMDb API key.")
     else:
-        st.error("City not found or API error. Please check the city name and try again.")
+        search_result = search_movie(query, api_key)
+
+        if "results" not in search_result or len(search_result["results"]) == 0:
+            st.error("❌ No movie found with that title.")
+        else:
+            movie = search_result["results"][0]
+            movie_id = movie["id"]
+            details = get_movie_details(movie_id, api_key)
+
+            # ========== Movie Info ==========
+            st.subheader(f"🎞 {details['title']} ({details['release_date'][:4]})")
+            st.image(f"https://image.tmdb.org/t/p/w500{details['poster_path']}")
+            st.markdown(f"*Overview*: {details['overview']}")
+            st.markdown(f"*Runtime*: {details['runtime']} mins")
+            st.markdown(f"*Vote Average*: {details['vote_average']}")
+            st.markdown(f"*Total Votes*: {details['vote_count']}")
+
+            # ========== Visualization 1: Vote Rating vs Count ==========
+            vote_data = pd.DataFrame({
+                "Metric": ["Average Rating", "Vote Count"],
+                "Value": [details["vote_average"], details["vote_count"]]
+            })
+
+            st.subheader("📊 Rating and Vote Count")
+            bar_chart = alt.Chart(vote_data).mark_bar().encode(
+                x="Metric",
+                y="Value",
+                color="Metric",
+                tooltip=["Metric", "Value"]
+            ).properties(width=600)
+            st.altair_chart(bar_chart)
+
+            # ========== Visualization 2: Genre Breakdown ==========
+            genres = [g["name"] for g in details["genres"]]
+            genre_df = pd.DataFrame({"Genre": genres, "Count": [1]*len(genres)})
+
+            st.subheader("🎨 Genre Breakdown")
+            pie_chart = alt.Chart(genre_df).mark_arc().encode(
+                theta="Count",
+                color="Genre",
+                tooltip="Genre"
+            )
+            st.altair_chart(pie_chart)
+
+            # ========== Optional: Full JSON ==========
+            with st.expander("🔍 See Full API Response"):
+                st.json(details)
