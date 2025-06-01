@@ -74,5 +74,5 @@ if st.button("Search Movie"):
             st.altair_chart(pie_chart)
 
             # ========== Optional: Full JSON ==========
-            with st.expander("🔍 See Full API Response"):
-                st.json(details)
+            #with st.expander("🔍 See Full API Response"):
+                #st.json(details)
