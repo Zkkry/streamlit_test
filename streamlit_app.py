@@ -4,7 +4,7 @@ import pandas as pd
 import altair as alt
 
 # ========== Streamlit UI Setup ==========
-st.set_page_config(page_title="🎬 TMDb Movie Explorer", layout="centered")
+st.set_page_config(page_title="🎬 :rainbow[TMDb Movie Explorer]", layout="centered")
 st.title("🎥 TMDb Movie Explorer App")
 st.markdown("Search movies by title and explore ratings, genres, and details.")
 
