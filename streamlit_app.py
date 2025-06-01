@@ -72,7 +72,3 @@ if st.button("Search Movie"):
                 tooltip="Genre"
             )
             st.altair_chart(pie_chart)
-
-            # ========== Optional: Full JSON ==========
-            #with st.expander("🔍 See Full API Response"):
-                #st.json(details)
