@@ -10,7 +10,7 @@ st.title("🎥 TMDb Movie Explorer App")
 st.markdown("Search movies by title and explore ratings, genres, and details.")
 
 # ========== Secure API Key Handling ==========
-api_key = os.environ.get("TMDB_API_KEY")
+api_key = os.environ.get("4f658b3a4df357c0e36dea39fe745497")
 if not api_key:
     st.error("TMDb API key not found. Please set the TMDB_API_KEY environment variable.")
     st.stop()
