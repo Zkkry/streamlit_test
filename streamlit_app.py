@@ -2,23 +2,18 @@ import streamlit as st
 import requests
 import pandas as pd
 import altair as alt
-import os
 
 # ========== Streamlit UI Setup ==========
 st.set_page_config(page_title="🎬 TMDb Movie Explorer", layout="centered")
 st.title("🎥 TMDb Movie Explorer App")
 st.markdown("Search movies by title and explore ratings, genres, and details.")
 
-# ========== Secure API Key Handling ==========
-api_key = os.environ.get("4f658b3a4df357c0e36dea39fe745497")
-if not api_key:
-    st.error("TMDb API key not found. Please set the TMDB_API_KEY environment variable.")
-    st.stop()
-
 # ========== User Input ==========
+#api_key = st.text_input("Enter your TMDb API key:", type="password")
 query = st.text_input("Enter a movie title:", "Inception")
 
 # ========== TMDb API Call Functions ==========
+
 def search_movie(query, api_key):
     url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}"
     response = requests.get(url)
@@ -31,50 +26,53 @@ def get_movie_details(movie_id, api_key):
 
 # ========== Fetch and Display Data ==========
 if st.button("Search Movie"):
-    search_result = search_movie(query, api_key)
-
-    if "results" not in search_result or len(search_result["results"]) == 0:
-        st.error("❌ No movie found with that title.")
+    if not api_key:
+        st.warning("⚠ Please enter your TMDb API key.")
     else:
-        movie = search_result["results"][0]
-        movie_id = movie["id"]
-        details = get_movie_details(movie_id, api_key)
+        search_result = search_movie(query, api_key)
 
-        # ========== Movie Info ==========
-        st.subheader(f"🎞 {details['title']} ({details['release_date'][:4]})")
-        st.image(f"https://image.tmdb.org/t/p/w500{details['poster_path']}")
-        st.markdown(f"*Overview*: {details['overview']}")
-        st.markdown(f"*Runtime*: {details['runtime']} mins")
-        st.markdown(f"*Vote Average*: {details['vote_average']}")
-        st.markdown(f"*Total Votes*: {details['vote_count']}")
+        if "results" not in search_result or len(search_result["results"]) == 0:
+            st.error("❌ No movie found with that title.")
+        else:
+            movie = search_result["results"][0]
+            movie_id = movie["id"]
+            details = get_movie_details(movie_id, api_key)
 
-        # ========== Visualization 1: Vote Rating vs Count ==========
-        vote_data = pd.DataFrame({
-            "Metric": ["Average Rating", "Vote Count"],
-            "Value": [details["vote_average"], details["vote_count"]]
-        })
+            # ========== Movie Info ==========
+            st.subheader(f"🎞 {details['title']} ({details['release_date'][:4]})")
+            st.image(f"https://image.tmdb.org/t/p/w500{details['poster_path']}")
+            st.markdown(f"*Overview*: {details['overview']}")
+            st.markdown(f"*Runtime*: {details['runtime']} mins")
+            st.markdown(f"*Vote Average*: {details['vote_average']}")
+            st.markdown(f"*Total Votes*: {details['vote_count']}")
 
-        st.subheader("📊 Rating and Vote Count")
-        bar_chart = alt.Chart(vote_data).mark_bar().encode(
-            x="Metric",
-            y="Value",
-            color="Metric",
-            tooltip=["Metric", "Value"]
-        ).properties(width=600)
-        st.altair_chart(bar_chart)
+            # ========== Visualization 1: Vote Rating vs Count ==========
+            vote_data = pd.DataFrame({
+                "Metric": ["Average Rating", "Vote Count"],
+                "Value": [details["vote_average"], details["vote_count"]]
+            })
 
-        # ========== Visualization 2: Genre Breakdown ==========
-        genres = [g["name"] for g in details["genres"]]
-        genre_df = pd.DataFrame({"Genre": genres, "Count": [1]*len(genres)})
+            st.subheader("📊 Rating and Vote Count")
+            bar_chart = alt.Chart(vote_data).mark_bar().encode(
+                x="Metric",
+                y="Value",
+                color="Metric",
+                tooltip=["Metric", "Value"]
+            ).properties(width=600)
+            st.altair_chart(bar_chart)
 
-        st.subheader("🎨 Genre Breakdown")
-        pie_chart = alt.Chart(genre_df).mark_arc().encode(
-            theta="Count",
-            color="Genre",
-            tooltip="Genre"
-        )
-        st.altair_chart(pie_chart)
+            # ========== Visualization 2: Genre Breakdown ==========
+            genres = [g["name"] for g in details["genres"]]
+            genre_df = pd.DataFrame({"Genre": genres, "Count": [1]*len(genres)})
 
-        # ========== Optional: Full JSON ==========
-        with st.expander("🔍 See Full API Response"):
-            st.json(details)
+            st.subheader("🎨 Genre Breakdown")
+            pie_chart = alt.Chart(genre_df).mark_arc().encode(
+                theta="Count",
+                color="Genre",
+                tooltip="Genre"
+            )
+            st.altair_chart(pie_chart)
+
+            # ========== Optional: Full JSON ==========
+            with st.expander("🔍 See Full API Response"):
+                st.json(details)
