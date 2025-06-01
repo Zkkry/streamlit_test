@@ -6,7 +6,7 @@ import altair as alt
 # ========== Streamlit UI Setup ==========
 st.set_page_config(page_title="🎬 TMDb Movie Explorer", layout="centered")
 st.title("🎥 :rainbow[TMDb Movie Explorer App]")
-st.markdown("Search movies by title and explore ratings, genres, and details.")
+st.markdown("**Search movies by title and explore ratings, genres, and details.**")
 
 # ========== Developer API Key ==========
 API_KEY = "4f658b3a4df357c0e36dea39fe745497"
